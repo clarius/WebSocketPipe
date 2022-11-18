@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en-US">
+
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width,maximum-scale=2">
+    <link rel="stylesheet" type="text/css" media="screen" href="/WebSocketPipe/assets/css/style.css?v=9fcc39ede218cd8abcdfc97ef9cd0ef1e66a3e4b">
+
+<!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>WebSocketPipe | System.IO.Pipelines API adapter for System.Net.WebSockets</title>
+<meta name="generator" content="Jekyll v3.9.0" />
+<meta property="og:title" content="WebSocketPipe" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="System.IO.Pipelines API adapter for System.Net.WebSockets" />
+<meta property="og:description" content="System.IO.Pipelines API adapter for System.Net.WebSockets" />
+<meta property="og:site_name" content="WebSocketPipe" />
+<script type="application/ld+json">
+{"@type":"WebSite","headline":"WebSocketPipe","url":"/WebSocketPipe/","description":"System.IO.Pipelines API adapter for System.Net.WebSockets","name":"WebSocketPipe","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/devlooped/WebSocketPipe">View on GitHub</a>
+
+          <h1 id="project_title">WebSocketPipe</h1>
+          <h2 id="project_tagline">System.IO.Pipelines API adapter for System.Net.WebSockets</h2>
+
+          
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <h1 id="-websocketpipe"><img src="https://raw.githubusercontent.com/devlooped/WebSocketPipe/main/assets/img/icon.png" alt="Icon" /> WebSocketPipe</h1>
+
+<p>High-performance System.IO.Pipelines API adapter for System.Net.WebSockets</p>
+
+<p><a href="https://www.nuget.org/packages/WebSocketPipe"><img src="https://img.shields.io/nuget/vpre/WebSocketPipe.svg?color=royalblue" alt="Version" /></a>
+<a href="https://www.nuget.org/packages/WebSocketPipe"><img src="https://img.shields.io/nuget/dt/WebSocketPipe.svg?color=green" alt="Downloads" /></a>
+<a href="https://github.com/devlooped/WebSocketPipe/blob/main/license.txt"><img src="https://img.shields.io/github/license/devlooped/WebSocketPipe.svg?color=blue" alt="License" /></a>
+<a href="https://github.com/devlooped/WebSocketPipe/actions"><img src="https://github.com/devlooped/WebSocketPipe/workflows/build/badge.svg?branch=main" alt="Build" /></a></p>
+
+<!-- #content -->
+<h1 id="usage">Usage</h1>
+
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">using</span> <span class="nn">Devlooped.Net</span><span class="p">;</span>
+
+<span class="kt">var</span> <span class="n">client</span> <span class="p">=</span> <span class="k">new</span> <span class="nf">ClientWebSocket</span><span class="p">();</span>
+<span class="k">await</span> <span class="n">client</span><span class="p">.</span><span class="nf">ConnectAsync</span><span class="p">(</span><span class="n">serverUri</span><span class="p">,</span> <span class="n">CancellationToken</span><span class="p">.</span><span class="n">None</span><span class="p">);</span>
+
+<span class="k">using</span> <span class="nn">IWebSocketPipe</span> <span class="n">pipe</span> <span class="p">=</span> <span class="n">WebSocketPipe</span><span class="p">.</span><span class="nf">Create</span><span class="p">(</span><span class="n">client</span><span class="p">,</span> <span class="n">closeWhenCompleted</span><span class="p">:</span> <span class="k">true</span><span class="p">);</span>
+
+<span class="c1">// Start the pipe before hooking up the processing</span>
+<span class="kt">var</span> <span class="n">run</span> <span class="p">=</span> <span class="n">pipe</span><span class="p">.</span><span class="nf">RunAsync</span><span class="p">();</span>
+</code></pre></div></div>
+
+<p>The <code class="language-plaintext highlighter-rouge">IWebSocketPipe</code> interface extends <a href="https://docs.microsoft.com/en-us/dotnet/api/system.io.pipelines.iduplexpipe?view=dotnet-plat-ext-5.0">IDuplexPipe</a>, 
+exposing <code class="language-plaintext highlighter-rouge">Input</code> and <code class="language-plaintext highlighter-rouge">Output</code> properties that can be used to 
+read incoming messages and write outgoing ones.</p>
+
+<p>For example, to read incoming data and write it to the console, 
+we could write the following code:</p>
+
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">await</span> <span class="nf">ReadIncoming</span><span class="p">(</span><span class="n">pipe</span><span class="p">.</span><span class="n">Input</span><span class="p">);</span>
+
+<span class="k">async</span> <span class="n">Task</span> <span class="nf">ReadIncoming</span><span class="p">(</span><span class="n">PipeReader</span> <span class="n">reader</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="k">while</span> <span class="p">(</span><span class="k">await</span> <span class="n">reader</span><span class="p">.</span><span class="nf">ReadAsync</span><span class="p">()</span> <span class="k">is</span> <span class="kt">var</span> <span class="n">result</span> <span class="p">&amp;&amp;</span> <span class="p">!</span><span class="n">result</span><span class="p">.</span><span class="n">IsCompleted</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">Console</span><span class="p">.</span><span class="nf">WriteLine</span><span class="p">(</span><span class="s">$"Received: </span><span class="p">{</span><span class="n">Encoding</span><span class="p">.</span><span class="n">UTF8</span><span class="p">.</span><span class="nf">GetString</span><span class="p">(</span><span class="n">result</span><span class="p">.</span><span class="n">Buffer</span><span class="p">)}</span><span class="s">"</span><span class="p">);</span>
+        <span class="n">reader</span><span class="p">.</span><span class="nf">AdvanceTo</span><span class="p">(</span><span class="n">result</span><span class="p">.</span><span class="n">Buffer</span><span class="p">.</span><span class="n">End</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="n">Console</span><span class="p">.</span><span class="nf">WriteLine</span><span class="p">(</span><span class="s">$"Done reading."</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Similarly, to write to the underlying websocket the input 
+entered in the console, we use code like the following:</p>
+
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">await</span> <span class="nf">SendOutgoing</span><span class="p">(</span><span class="n">pipe</span><span class="p">.</span><span class="n">Output</span><span class="p">);</span>
+
+<span class="k">async</span> <span class="n">Task</span> <span class="nf">SendOutgoing</span><span class="p">(</span><span class="n">PipeWriter</span> <span class="n">writer</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="k">while</span> <span class="p">(</span><span class="n">Console</span><span class="p">.</span><span class="nf">ReadLine</span><span class="p">()</span> <span class="k">is</span> <span class="kt">var</span> <span class="n">line</span> <span class="p">&amp;&amp;</span> <span class="n">line</span><span class="p">?.</span><span class="n">Length</span> <span class="p">&gt;</span> <span class="m">0</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">Encoding</span><span class="p">.</span><span class="n">UTF8</span><span class="p">.</span><span class="nf">GetBytes</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">writer</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="k">await</span> <span class="n">writer</span><span class="p">.</span><span class="nf">CompleteAsync</span><span class="p">();</span>
+    <span class="n">Console</span><span class="p">.</span><span class="nf">WriteLine</span><span class="p">(</span><span class="s">$"Done writing."</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>If we wanted to simultaneously read and write and wait for 
+completion of both operations, we could just wait for both 
+tasks:</p>
+
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// Wait for completion of processing code</span>
+<span class="k">await</span> <span class="n">Task</span><span class="p">.</span><span class="nf">WhenAny</span><span class="p">(</span>
+    <span class="nf">ReadIncoming</span><span class="p">(</span><span class="n">pipe</span><span class="p">.</span><span class="n">Input</span><span class="p">),</span>
+    <span class="nf">SendOutgoing</span><span class="p">(</span><span class="n">pipe</span><span class="p">.</span><span class="n">Output</span><span class="p">));</span>
+</code></pre></div></div>
+
+<p>Note that completing the <code class="language-plaintext highlighter-rouge">PipeWriter</code> automatically causes the 
+reader to reveive a completed result and exit the loop. In addition, 
+the overall <code class="language-plaintext highlighter-rouge">IWebSocketPipe.RunAsync</code> task will also run to completion.</p>
+
+<p>The <code class="language-plaintext highlighter-rouge">IWebSocketPipe</code> takes care of gracefully closing the connection 
+when the input or output are completed, if <code class="language-plaintext highlighter-rouge">closeWhenCompleted</code> is set 
+to true when creating it.</p>
+
+<p>Alternatively, it’s also possible to complete the entire pipe explicitly, 
+while setting an optional socket close status and status description for 
+the server to act on:</p>
+
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">await</span> <span class="n">pipe</span><span class="p">.</span><span class="nf">CompleteAsync</span><span class="p">(</span><span class="n">WebSocketCloseStatus</span><span class="p">.</span><span class="n">NormalClosure</span><span class="p">,</span> <span class="s">"Done processing"</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>Specifying a close status will always close the underlying socket.</p>
+
+<p>The <code class="language-plaintext highlighter-rouge">WebSocketPipe</code> can also be used on the server. The following example is basically 
+taken from the documentation on <a href="https://docs.microsoft.com/en-us/aspnet/core/fundamentals/websockets?view=aspnetcore-5.0#configure-the-middleware">WebSockets in ASP.NET Core</a> 
+and adapted to use a <code class="language-plaintext highlighter-rouge">WebSocketPipe</code> to echo messages to the client:</p>
+
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">app</span><span class="p">.</span><span class="nf">Use</span><span class="p">(</span><span class="k">async</span> <span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">next</span><span class="p">)</span> <span class="p">=&gt;</span>
+<span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">context</span><span class="p">.</span><span class="n">Request</span><span class="p">.</span><span class="n">Path</span> <span class="p">==</span> <span class="s">"/ws"</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">context</span><span class="p">.</span><span class="n">WebSockets</span><span class="p">.</span><span class="n">IsWebSocketRequest</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="k">using</span> <span class="nn">var</span> <span class="n">websocket</span> <span class="p">=</span> <span class="k">await</span> <span class="n">context</span><span class="p">.</span><span class="n">WebSockets</span><span class="p">.</span><span class="nf">AcceptWebSocketAsync</span><span class="p">();</span>
+            <span class="k">using</span> <span class="nn">var</span> <span class="n">pipe</span> <span class="p">=</span> <span class="n">WebSocketPipe</span><span class="p">.</span><span class="nf">Create</span><span class="p">(</span><span class="n">websocket</span><span class="p">,</span> <span class="k">true</span><span class="p">);</span>
+            <span class="k">await</span> <span class="n">Task</span><span class="p">.</span><span class="nf">WhenAll</span><span class="p">(</span><span class="nf">Echo</span><span class="p">(</span><span class="n">pipe</span><span class="p">),</span> <span class="n">pipe</span><span class="p">.</span><span class="nf">RunAsync</span><span class="p">(</span><span class="n">context</span><span class="p">.</span><span class="n">RequestAborted</span><span class="p">));</span>
+        <span class="p">}</span>
+        <span class="k">else</span>
+        <span class="p">{</span>
+            <span class="n">context</span><span class="p">.</span><span class="n">Response</span><span class="p">.</span><span class="n">StatusCode</span> <span class="p">=</span> <span class="p">(</span><span class="kt">int</span><span class="p">)</span> <span class="n">HttpStatusCode</span><span class="p">.</span><span class="n">BadRequest</span><span class="p">;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+    <span class="k">else</span>
+    <span class="p">{</span>
+        <span class="k">await</span> <span class="nf">next</span><span class="p">();</span>
+    <span class="p">}</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>The sample <code class="language-plaintext highlighter-rouge">Echo</code> method is simply:</p>
+
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">async</span> <span class="n">Task</span> <span class="nf">Echo</span><span class="p">(</span><span class="n">IDuplexPipe</span> <span class="n">pipe</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="k">while</span> <span class="p">(</span><span class="k">await</span> <span class="n">pipe</span><span class="p">.</span><span class="n">Input</span><span class="p">.</span><span class="nf">ReadAsync</span><span class="p">()</span> <span class="k">is</span> <span class="kt">var</span> <span class="n">result</span> <span class="p">&amp;&amp;</span> <span class="p">!</span><span class="n">result</span><span class="p">.</span><span class="n">IsCompleted</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="c1">// Just assume we get a single-segment entry, for simplicity</span>
+        <span class="k">await</span> <span class="n">pipe</span><span class="p">.</span><span class="n">Output</span><span class="p">.</span><span class="nf">WriteAsync</span><span class="p">(</span><span class="n">result</span><span class="p">.</span><span class="n">Buffer</span><span class="p">.</span><span class="n">First</span><span class="p">);</span>
+        <span class="n">pipe</span><span class="p">.</span><span class="n">Input</span><span class="p">.</span><span class="nf">AdvanceTo</span><span class="p">(</span><span class="n">result</span><span class="p">.</span><span class="n">Buffer</span><span class="p">.</span><span class="n">End</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+<!-- #content -->
+
+<h1 id="dogfooding">Dogfooding</h1>
+
+<p><a href="https://pkg.kzu.io/index.json"><img src="https://img.shields.io/endpoint?url=https://shields.kzu.io/vpre/WebSocketPipe/main&amp;label=nuget.ci&amp;color=brightgreen" alt="CI Version" /></a>
+<a href="https://github.com/devlooped/WebSocketPipe/actions"><img src="https://github.com/devlooped/WebSocketPipe/workflows/build/badge.svg?branch=main" alt="Build" /></a></p>
+
+<p>We also produce CI packages from branches and pull requests so you can dogfood builds as quickly as they are produced.</p>
+
+<p>The CI feed is <code class="language-plaintext highlighter-rouge">https://pkg.kzu.io/index.json</code>.</p>
+
+<p>The versioning scheme for packages is:</p>
+
+<ul>
+  <li>PR builds: <em>42.42.42-pr</em><code class="language-plaintext highlighter-rouge">[NUMBER]</code></li>
+  <li>Branch builds: <em>42.42.42-</em><code class="language-plaintext highlighter-rouge">[BRANCH]</code>.<code class="language-plaintext highlighter-rouge">[COMMITS]</code></li>
+</ul>
+
+<!-- include https://github.com/devlooped/sponsors/raw/main/footer.md -->
+<h1 id="sponsors">Sponsors</h1>
+
+<!-- sponsors.md -->
+<p><a href="https://github.com/clarius"><img src="https://raw.githubusercontent.com/devlooped/sponsors/main/.github/avatars/clarius.png" alt="Clarius Org" title="Clarius Org" /></a>
+<a href="https://github.com/MelbourneDeveloper"><img src="https://raw.githubusercontent.com/devlooped/sponsors/main/.github/avatars/MelbourneDeveloper.png" alt="Christian Findlay" title="Christian Findlay" /></a>
+<a href="https://github.com/augustoproiete"><img src="https://raw.githubusercontent.com/devlooped/sponsors/main/.github/avatars/augustoproiete.png" alt="C. Augusto Proiete" title="C. Augusto Proiete" /></a>
+<a href="https://github.com/KirillOsenkov"><img src="https://raw.githubusercontent.com/devlooped/sponsors/main/.github/avatars/KirillOsenkov.png" alt="Kirill Osenkov" title="Kirill Osenkov" /></a>
+<a href="https://github.com/MFB-Technologies-Inc"><img src="https://raw.githubusercontent.com/devlooped/sponsors/main/.github/avatars/MFB-Technologies-Inc.png" alt="MFB Technologies, Inc." title="MFB Technologies, Inc." /></a>
+<a href="https://github.com/sandrock"><img src="https://raw.githubusercontent.com/devlooped/sponsors/main/.github/avatars/sandrock.png" alt="SandRock" title="SandRock" /></a>
+<a href="https://github.com/agocke"><img src="https://raw.githubusercontent.com/devlooped/sponsors/main/.github/avatars/agocke.png" alt="Andy Gocke" title="Andy Gocke" /></a>
+<a href="https://github.com/shahzadhuq"><img src="https://raw.githubusercontent.com/devlooped/sponsors/main/.github/avatars/shahzadhuq.png" alt="Shahzad Huq" title="Shahzad Huq" /></a></p>
+
+<!-- sponsors.md -->
+
+<p><a href="https://github.com/sponsors/devlooped"><img src="https://raw.githubusercontent.com/devlooped/sponsors/main/sponsor.png" alt="Sponsor this project" title="Sponsor this project" /></a>
+ </p>
+
+<p><a href="https://github.com/sponsors">Learn more about GitHub Sponsors</a></p>
+
+<!-- https://github.com/devlooped/sponsors/raw/main/footer.md -->
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        
+        <p class="copyright">WebSocketPipe maintained by <a href="https://github.com/devlooped">devlooped</a></p>
+        
+        <p>Published with <a href="https://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+  </body>
+</html>
